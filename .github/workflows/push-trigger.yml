@@ -59,22 +59,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v4
-        if: ${{ ( env.BUILD_ARTIFACT != 'false' ) }}
         with:
           name: ${{ env.BUILD_ARTIFACT }}
           path: ../
       - name: recreate zip
         run: |
-          cd ../
+          # Create target directory if it doesn't exist
+          mkdir -p "${{ env.SERVICE_LOCATION }}/target"
           
-          echo "LS ./"
-          ls .
-          echo "unzip command"
-          unzip -uj "${{ env.BUILD_ARTIFACT }}.zip" "target/*" -d "${{ env.SERVICE_LOCATION }}/target/"
+          # Unzip the artifact directly to target directory
+          unzip -j "../${{ env.BUILD_ARTIFACT }}.zip" -d "${{ env.SERVICE_LOCATION }}/target/"
           
-          echo "find command"
-          cd ${{ env.SERVICE_LOCATION }}
-          find ../${{ env.SERVICE_LOCATION }} -path '*/target/*' -name '*.jar'  -type f  -executable -exec zip ${{ env.NEW_BUILD_ARTIFACT }}.zip {} +
+          # Create the new ZIP in the root directory
+          cd "${{ env.SERVICE_LOCATION }}/target"
+          zip "../../${{ env.NEW_BUILD_ARTIFACT }}.zip" *.jar
+          
+          # Verify the ZIP was created
+          echo "Created ZIP file at:"
+          ls -la "../../${{ env.NEW_BUILD_ARTIFACT }}.zip"
 
       - name: Upload the springboot jars
         if: ${{ !contains(github.ref, 'master') || !contains(github.ref, 'main') }}
