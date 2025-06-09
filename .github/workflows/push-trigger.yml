@@ -64,20 +64,23 @@ jobs:
           path: ../
       - name: recreate zip
         run: |
-          # Create target directory if it doesn't exist
+          # Create target directory
           mkdir -p "${{ env.SERVICE_LOCATION }}/target"
           
-          # Unzip the artifact directly to target directory
+          # Extract ALL files from the zip to target directory
           unzip -j "../${{ env.BUILD_ARTIFACT }}.zip" -d "${{ env.SERVICE_LOCATION }}/target/"
           
-          # Create the new ZIP in the root directory
-          cd "${{ env.SERVICE_LOCATION }}/target"
-          zip "../../${{ env.NEW_BUILD_ARTIFACT }}.zip" *.jar
+          # Verify extraction
+          echo "Files in target directory:"
+          ls -la "${{ env.SERVICE_LOCATION }}/target"
           
-          # Verify the ZIP was created
-          echo "Created ZIP file at:"
+          # Create new zip with ALL files from target directory
+          cd "${{ env.SERVICE_LOCATION }}/target"
+          zip "../../${{ env.NEW_BUILD_ARTIFACT }}.zip" *
+          
+          # Verify the new zip
+          echo "Created ZIP file:"
           ls -la "../../${{ env.NEW_BUILD_ARTIFACT }}.zip"
-
       - name: Upload the springboot jars
         if: ${{ !contains(github.ref, 'master') || !contains(github.ref, 'main') }}
         uses: actions/upload-artifact@v4
